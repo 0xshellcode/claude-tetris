@@ -78,6 +78,7 @@
         <p class="menu-title">MODO DE JUEGO</p>
         <ul id="mode-list" class="ability-list"></ul>
         <p class="menu-hint"><kbd>1</kbd>–<kbd>6</kbd> o clic para elegir</p>
+        <div id="menu-records" class="records"></div>
       </div>
     </div>
 
@@ -93,6 +94,12 @@
       <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
+        <p id="new-record" class="new-record hidden">¡Nuevo récord!</p>
+        <div id="name-entry" class="name-entry hidden">
+          <input id="player-name" type="text" maxlength="12" placeholder="Tu nombre" autocomplete="off" spellcheck="false" aria-label="Nombre del jugador" />
+          <button id="save-score-btn">Guardar</button>
+        </div>
+        <div id="overlay-records" class="records hidden"></div>
         <button id="restart-btn">Reiniciar</button>
         <button id="mode-btn" class="secondary-btn">Cambiar modo</button>
       </div>
