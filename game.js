@@ -44,6 +44,11 @@ const SINGLE_TYPE = 12;
 const QUEUE_SIZE = 5;
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
+const TSPIN_SCORES = [400, 800, 1200, 1600];
+const TSPIN_NAMES = ['', 'SINGLE', 'DOUBLE', 'TRIPLE'];
+const B2B_MULTIPLIER = 1.5;
+const PERFECT_CLEAR_BONUS = 3000;
+const T_TYPE = 3;
 
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
@@ -54,6 +59,7 @@ const holdCtx = holdCanvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const linesEl = document.getElementById('lines');
 const levelEl = document.getElementById('level');
+const comboEl = document.getElementById('combo');
 const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
@@ -62,6 +68,11 @@ const themeToggleBtn = document.getElementById('theme-toggle');
 
 let board, current, queue, hold, canHold, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let gridLineColor = '#22222e';
+// combo: limpiezas consecutivas; b2b: la última limpieza fue "difícil" (Tetris o T-spin)
+let combo, b2b, lastMoveRotate;
+// Textos flotantes sobre el tablero y destello de Perfect Clear
+let effects = [], flash = 0;
+let audioCtx = null, muted = false;
 
 const THEME_STORAGE_KEY = 'tetris-theme';
 
@@ -137,6 +148,7 @@ function tryRotate() {
     if (!collide(rotated, current.x + kick, current.y)) {
       current.shape = rotated;
       current.x += kick;
+      lastMoveRotate = true;
       return;
     }
   }
@@ -147,6 +159,19 @@ function merge() {
     for (let c = 0; c < current.shape[r].length; c++)
       if (current.shape[r][c])
         board[current.y + r][current.x + c] = current.shape[r][c];
+}
+
+// Regla de las 3 esquinas: la T giró como último movimiento y al menos
+// 3 de las 4 esquinas de su caja 3×3 están ocupadas (paredes y suelo cuentan).
+function isTSpin() {
+  if (current.type !== T_TYPE || !lastMoveRotate) return false;
+  const corners = [[0, 0], [2, 0], [0, 2], [2, 2]];
+  let filled = 0;
+  for (const [dc, dr] of corners) {
+    const x = current.x + dc, y = current.y + dr;
+    if (x < 0 || x >= COLS || y >= ROWS || (y >= 0 && board[y][x])) filled++;
+  }
+  return filled >= 3;
 }
 
 function clearLines() {
@@ -163,11 +188,80 @@ function clearLines() {
   if (cleared === 4) queue.unshift(makePiece(SINGLE_TYPE));
   if (cleared) {
     lines += cleared;
-    score += (LINE_SCORES[cleared] || 0) * level;
     level = Math.floor(lines / 10) + 1;
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
-    updateHUD();
   }
+  return cleared;
+}
+
+function scoreClear(cleared, tspin) {
+  if (!cleared && !tspin) {
+    combo = 0;
+    updateHUD();
+    return;
+  }
+  let points = (tspin ? TSPIN_SCORES[cleared] : LINE_SCORES[cleared] || 0) * level;
+  const labels = [];
+  if (tspin) labels.push(`T-SPIN ${TSPIN_NAMES[cleared]}`.trim());
+  else if (cleared === 4) labels.push('TETRIS');
+
+  if (cleared) {
+    const difficult = tspin || cleared >= 4;
+    if (difficult && b2b) {
+      points = Math.floor(points * B2B_MULTIPLIER);
+      labels.push('BACK-TO-BACK');
+    }
+    b2b = difficult;
+    combo++;
+    if (combo > 1) {
+      points *= combo;
+      labels.push(`COMBO x${combo}`);
+    }
+    if (board.every(row => row.every(v => !v))) {
+      points += PERFECT_CLEAR_BONUS * level;
+      labels.push('PERFECT CLEAR');
+      flash = 400;
+    }
+  } else {
+    combo = 0;
+  }
+
+  score += points;
+  labels.forEach((text, i) => addEffect(text, i));
+  if (labels.length) addEffect(`+${points.toLocaleString()}`, labels.length);
+  playClearSound(cleared, labels.length > 0);
+  updateHUD();
+}
+
+function addEffect(text, slot = 0) {
+  effects.push({ text, slot, ttl: 1200, max: 1200 });
+}
+
+function playTone(freq, duration, delay = 0, type = 'square') {
+  if (muted) return;
+  try {
+    audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+  } catch {
+    return;
+  }
+  const t = audioCtx.currentTime + delay;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.06, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(t);
+  osc.stop(t + duration);
+}
+
+// El tono sube un semitono por cada eslabón del combo; las jugadas
+// especiales añaden un arpegio.
+function playClearSound(cleared, special) {
+  const base = 330 * Math.pow(2, Math.min(combo, 12) / 12);
+  for (let i = 0; i < Math.max(1, cleared); i++) playTone(base * Math.pow(1.25, i), 0.12, i * 0.06);
+  if (special) [1, 1.5, 2].forEach((m, i) => playTone(base * 2 * m, 0.15, 0.25 + i * 0.08, 'triangle'));
 }
 
 function ghostY() {
@@ -178,6 +272,7 @@ function ghostY() {
 
 function hardDrop() {
   const gy = ghostY();
+  if (gy !== current.y) lastMoveRotate = false;
   score += (gy - current.y) * 2;
   current.y = gy;
   lockPiece();
@@ -186,6 +281,7 @@ function hardDrop() {
 function softDrop() {
   if (!collide(current.shape, current.x, current.y + 1)) {
     current.y++;
+    lastMoveRotate = false;
     score += 1;
     updateHUD();
   } else {
@@ -194,8 +290,9 @@ function softDrop() {
 }
 
 function lockPiece() {
+  const tspin = isTSpin();
   merge();
-  clearLines();
+  scoreClear(clearLines(), tspin);
   canHold = true;
   spawn();
 }
@@ -207,6 +304,7 @@ function spawn(piece) {
     current = queue.shift();
     fillQueue();
   }
+  lastMoveRotate = false;
   if (collide(current.shape, current.x, current.y)) {
     endGame();
   }
@@ -228,6 +326,7 @@ function updateHUD() {
   scoreEl.textContent = score.toLocaleString();
   linesEl.textContent = lines;
   levelEl.textContent = level;
+  comboEl.textContent = combo > 1 ? `x${combo}` : '-';
 }
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
@@ -282,6 +381,35 @@ function draw() {
   for (let r = 0; r < current.shape.length; r++)
     for (let c = 0; c < current.shape[r].length; c++)
       drawBlock(ctx, current.x + c, current.y + r, current.shape[r][c], BLOCK);
+
+  drawEffects();
+}
+
+function drawEffects() {
+  if (flash > 0) {
+    ctx.fillStyle = `rgba(255,255,255,${(flash / 400) * 0.6})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 20px system-ui, sans-serif';
+  for (const fx of effects) {
+    const progress = 1 - fx.ttl / fx.max;
+    const y = canvas.height * 0.35 + fx.slot * 28 - progress * 30;
+    ctx.globalAlpha = Math.min(1, fx.ttl / 400);
+    ctx.lineWidth = 4;
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.strokeText(fx.text, canvas.width / 2, y);
+    ctx.fillStyle = '#ffd54f';
+    ctx.fillText(fx.text, canvas.width / 2, y);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function updateEffects(dt) {
+  flash = Math.max(0, flash - dt);
+  for (const fx of effects) fx.ttl -= dt;
+  effects = effects.filter(fx => fx.ttl > 0);
 }
 
 function drawPreview(context, previewCanvas, shape) {
@@ -335,10 +463,12 @@ function loop(ts) {
     dropAccum = 0;
     if (!collide(current.shape, current.x, current.y + 1)) {
       current.y++;
+      lastMoveRotate = false;
     } else {
       lockPiece();
     }
   }
+  updateEffects(dt);
   // endGame() pudo ejecutarse dentro de este frame: su cancelAnimationFrame no
   // detiene el frame en curso, así que aquí se corta el loop sin agendar otro.
   if (gameOver) return;
@@ -353,6 +483,10 @@ function init() {
   level = 1;
   paused = false;
   gameOver = false;
+  combo = 0;
+  b2b = false;
+  effects = [];
+  flash = 0;
   dropInterval = 1000;
   dropAccum = 0;
   lastTime = performance.now();
@@ -369,13 +503,14 @@ function init() {
 
 document.addEventListener('keydown', e => {
   if (e.code === 'KeyP') { togglePause(); return; }
+  if (e.code === 'KeyM') { muted = !muted; return; }
   if (paused || gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
-      if (!collide(current.shape, current.x - 1, current.y)) current.x--;
+      if (!collide(current.shape, current.x - 1, current.y)) { current.x--; lastMoveRotate = false; }
       break;
     case 'ArrowRight':
-      if (!collide(current.shape, current.x + 1, current.y)) current.x++;
+      if (!collide(current.shape, current.x + 1, current.y)) { current.x++; lastMoveRotate = false; }
       break;
     case 'ArrowDown':
       softDrop();
