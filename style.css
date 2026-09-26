@@ -40,6 +40,36 @@
   --restart-hover: #5c7cfa;
 }
 
+/* ---- Skins: fondo del tablero y rejilla (van tras los temas para prevalecer) ---- */
+:root[data-skin="neon"] {
+  --board-bg: #000000;
+  --grid-line: #12121e;
+}
+
+:root[data-skin="pastel"] {
+  --board-bg: #27232f;
+  --grid-line: #332e3d;
+}
+
+:root[data-skin="pastel"][data-theme="light"] {
+  --board-bg: #fdf7fa;
+  --grid-line: #f1e4ec;
+}
+
+:root[data-skin="pixel"] {
+  --board-bg: #14141c;
+  --grid-line: #1c1c28;
+}
+
+:root[data-skin="pixel"][data-theme="light"] {
+  --board-bg: #f4f4ec;
+  --grid-line: #e2e2d6;
+}
+
+:root[data-skin="neon"] #board {
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.25);
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -353,4 +383,22 @@ kbd {
   font-size: 13px;
   font-weight: 700;
   color: var(--value-color);
+}
+
+/* ---- Selector de skin ---- */
+.skin-select {
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.skin-select:hover,
+.skin-select:focus {
+  border-color: var(--value-color);
+  outline: none;
 }
