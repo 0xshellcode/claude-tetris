@@ -14,6 +14,10 @@ const COLORS = [
   '#64b5f6', // J - light blue
   '#ffb74d', // L - orange
   '#90a4ae', // N - tuerca, gris metálico
+  '#f06292', // + - rosa
+  '#aed581', // U - lima
+  '#4db6ac', // Y - verde azulado
+  '#a1887f', // 1×1 - café
 ];
 
 const PIECES = [
@@ -26,7 +30,18 @@ const PIECES = [
   [[6,0,0],[6,6,6],[0,0,0]],                  // J
   [[0,0,7],[7,7,7],[0,0,0]],                  // L
   [[8,8,8],[8,0,8],[8,8,8]],                  // N - tuerca: hueco central que solo se rellena por abajo
+  [[0,9,0],[9,9,9],[0,9,0]],                  // + (pentominó)
+  [[10,0,10],[10,10,10],[0,0,0]],             // U (pentominó)
+  [[0,0,0,0],[11,11,11,11],[0,11,0,0],[0,0,0,0]], // Y (pentominó)
+  [[12]],                                      // 1×1 - recompensa tras un Tetris
 ];
+
+const STANDARD_TYPES = [1, 2, 3, 4, 5, 6, 7];
+// Piezas no estándar que aparecen ocasionalmente: tuerca, +, U, Y
+const SPECIAL_TYPES = [8, 9, 10, 11];
+const SPECIAL_CHANCE = 0.1;
+const SINGLE_TYPE = 12;
+const QUEUE_SIZE = 5;
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
 
@@ -45,7 +60,7 @@ const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggleBtn = document.getElementById('theme-toggle');
 
-let board, current, next, hold, canHold, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let board, current, queue, hold, canHold, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let gridLineColor = '#22222e';
 
 const THEME_STORAGE_KEY = 'tetris-theme';
@@ -81,8 +96,16 @@ function makePiece(type) {
   return { type, shape, x: Math.floor(COLS / 2) - Math.floor(shape[0].length / 2), y: 0 };
 }
 
+function pick(list) {
+  return list[Math.floor(Math.random() * list.length)];
+}
+
 function randomPiece() {
-  return makePiece(Math.floor(Math.random() * (PIECES.length - 1)) + 1);
+  return makePiece(Math.random() < SPECIAL_CHANCE ? pick(SPECIAL_TYPES) : pick(STANDARD_TYPES));
+}
+
+function fillQueue() {
+  while (queue.length < QUEUE_SIZE) queue.push(randomPiece());
 }
 
 function collide(shape, ox, oy) {
@@ -136,6 +159,8 @@ function clearLines() {
       r++;
     }
   }
+  // Recompensa por Tetris: la siguiente pieza es un 1×1 para tapar huecos.
+  if (cleared === 4) queue.unshift(makePiece(SINGLE_TYPE));
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
@@ -179,8 +204,8 @@ function spawn(piece) {
   if (piece) {
     current = piece;
   } else {
-    current = next;
-    next = randomPiece();
+    current = queue.shift();
+    fillQueue();
   }
   if (collide(current.shape, current.x, current.y)) {
     endGame();
@@ -271,7 +296,7 @@ function drawPreview(context, previewCanvas, shape) {
 }
 
 function drawNext() {
-  drawPreview(nextCtx, nextCanvas, next.shape);
+  drawPreview(nextCtx, nextCanvas, queue[0].shape);
 }
 
 function drawHold() {
@@ -333,7 +358,8 @@ function init() {
   lastTime = performance.now();
   hold = null;
   canHold = true;
-  next = randomPiece();
+  queue = [];
+  fillQueue();
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
