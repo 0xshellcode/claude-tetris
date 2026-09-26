@@ -61,12 +61,12 @@
           <span class="label">CONTROLS</span>
           <ul>
             <li><kbd>←</kbd><kbd>→</kbd> mover</li>
-            <li><kbd>↑</kbd> rotar</li>
+            <li><kbd>↑</kbd><kbd>X</kbd> rotar</li>
             <li><kbd>↓</kbd> bajar</li>
             <li><kbd>Space</kbd> caída</li>
             <li><kbd>C</kbd><kbd>Shift</kbd> reservar</li>
             <li><kbd>E</kbd> habilidad</li>
-            <li><kbd>P</kbd> pausa</li>
+            <li><kbd>P</kbd><kbd>Esc</kbd> pausa</li>
             <li><kbd>M</kbd> sonido</li>
           </ul>
         </div>
@@ -86,6 +86,33 @@
         <p class="menu-title">HABILIDAD</p>
         <ul id="ability-list" class="ability-list"></ul>
         <p class="menu-hint"><kbd>1</kbd>–<kbd>5</kbd> elegir · <kbd>Esc</kbd> cancelar</p>
+      </div>
+    </div>
+
+    <div id="pause-menu" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+      <div class="overlay-box pause-box">
+        <p id="pause-title" class="menu-title">PAUSA</p>
+        <div class="pause-options">
+          <button id="resume-btn" class="menu-btn primary">Reanudar</button>
+          <button id="pause-restart-btn" class="menu-btn">Reiniciar</button>
+          <button id="controls-btn" class="menu-btn" aria-expanded="false" aria-controls="pause-controls">Ver controles</button>
+        </div>
+        <ul id="pause-controls" class="pause-controls" hidden>
+          <li><span><kbd>←</kbd><kbd>→</kbd></span> mover</li>
+          <li><span><kbd>↓</kbd></span> bajar (soft drop)</li>
+          <li><span><kbd>↑</kbd><kbd>X</kbd></span> rotar</li>
+          <li><span><kbd>Space</kbd></span> caída instantánea</li>
+          <li><span><kbd>C</kbd><kbd>Shift</kbd></span> reservar (hold)</li>
+          <li><span><kbd>E</kbd></span> habilidad</li>
+          <li><span><kbd>P</kbd><kbd>Esc</kbd></span> pausa / reanudar</li>
+          <li><span><kbd>M</kbd></span> sonido</li>
+        </ul>
+        <label class="start-level" for="start-level-select">
+          Nivel inicial
+          <select id="start-level-select"></select>
+        </label>
+        <p class="menu-hint">El nivel inicial se aplica a la próxima partida</p>
+        <p class="menu-hint"><kbd>P</kbd> / <kbd>Esc</kbd> reanudar</p>
       </div>
     </div>
 
