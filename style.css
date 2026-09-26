@@ -222,3 +222,126 @@ kbd {
 #restart-btn:hover {
   background: var(--restart-hover);
 }
+
+/* ---- Menú de pausa ---- */
+.menu-box {
+  width: 220px;
+}
+
+#pause-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: var(--value-color);
+}
+
+.menu-view {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  width: 100%;
+}
+
+.menu-view.hidden {
+  display: none;
+}
+
+.menu-btn {
+  background: var(--kbd-bg);
+  color: var(--text);
+  border: 1px solid var(--kbd-border);
+  border-radius: 6px;
+  padding: 10px 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.menu-btn:hover,
+.menu-btn:focus-visible {
+  border-color: var(--value-color);
+  outline: none;
+}
+
+.menu-btn.primary {
+  background: var(--restart-bg);
+  color: var(--restart-color);
+  border-color: var(--restart-bg);
+}
+
+.menu-btn.primary:hover,
+.menu-btn.primary:focus-visible {
+  background: var(--restart-hover);
+  border-color: var(--restart-hover);
+}
+
+.level-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.level-stepper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.level-stepper .value {
+  min-width: 2ch;
+  text-align: center;
+}
+
+.step-btn {
+  background: none;
+  border: 1px solid var(--kbd-border);
+  border-radius: 4px;
+  color: var(--kbd-color);
+  font-size: 12px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.step-btn:hover:not(:disabled) {
+  border-color: var(--value-color);
+  color: var(--value-color);
+}
+
+.step-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.menu-hint {
+  font-size: 11px;
+  color: var(--controls-color);
+}
+
+.menu-controls {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.menu-controls li {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--controls-color);
+  text-align: left;
+}
+
+.menu-controls li span {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+}
