@@ -101,10 +101,20 @@ jobs:
                Preguntas para quien abrió el issue, o "Ninguna".
 
             No inventes archivos ni líneas: cita solo lo que hayas leído.
+
+            Formato: el diagnóstico se publica tal cual como comentario de GitHub, así que
+            debe ser GitHub Flavored Markdown válido que GitHub renderice correctamente:
+            - Texto Markdown directo, con saltos de línea reales; no envuelvas el
+              diagnóstico completo en un bloque de código.
+            - Fragmentos de código en bloques con triple backtick e indicando el lenguaje
+              (```js, ```css, ```html); nombres de archivos, funciones y variables entre `backticks`.
+            - Referencias a código como enlaces que GitHub pueda abrir:
+              [archivo:línea](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/ruta/archivo#L10)
+            - Listas con `-`, pasos con `1.`, checklists con `- [ ]` y tablas GFM si aportan claridad.
           claude_args: |
             --allowedTools "Read,Glob,Grep"
             --max-turns 20
-            --json-schema '{"type":"object","properties":{"labels":{"type":"array","items":{"type":"string"},"description":"Nombres exactos de labels existentes"},"diagnosis":{"type":"string","description":"Diagnóstico en Markdown"}},"required":["labels","diagnosis"],"additionalProperties":false}'
+            --json-schema '{"type":"object","properties":{"labels":{"type":"array","items":{"type":"string"},"description":"Nombres exactos de labels existentes"},"diagnosis":{"type":"string","description":"Diagnóstico en GitHub Flavored Markdown listo para publicarse como comentario de GitHub"}},"required":["labels","diagnosis"],"additionalProperties":false}'
 
       - name: Apply labels and post diagnosis
         env:
