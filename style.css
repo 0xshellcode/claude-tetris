@@ -48,6 +48,17 @@
   --input-bg: #ffffff;
 }
 
+/* Skin neon: tablero negro siempre, sea cual sea el tema claro/oscuro. */
+:root[data-skin="neon"] {
+  --board-bg: #000000;
+  --board-border: #1f1f3a;
+  --grid-line: #0c0c18;
+}
+
+:root[data-skin="neon"] #board {
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.25);
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -148,6 +159,17 @@ body {
   border: 1px solid var(--board-border);
   background: var(--board-bg);
   border-radius: 4px;
+}
+
+.skin-select {
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 /* ---- Controles ---- */

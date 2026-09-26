@@ -45,6 +45,7 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
 - **Menú de pausa** (`P` o `Esc`): reanudar, reiniciar sin recargar, ver controles y elegir el **nivel inicial** (1–10) de la próxima partida. Mientras está abierto, las teclas del juego quedan bloqueadas.
 - **Game Over** con opción de reinicio.
 - **Tabla de récords local** (`localStorage`): top 5 con nombre, líneas y combo de cada partida, visible en la pantalla de inicio y al perder. Si la partida entra en el top se resalta y se pide el nombre; también guarda el **mejor combo** y las **líneas máximas** históricas. Incluye botón para borrar los récords.
+- **Skins** seleccionables desde el panel (_Retro_, _Neon_, _Pastel_, _Pixel art_); el cambio es inmediato y la preferencia se guarda en `localStorage`.
 
 ---
 
@@ -192,7 +193,7 @@ Algunos parámetros fáciles de tunear en `game.js`:
 | `COLS`         | Columnas del tablero                     | `10`                  |
 | `ROWS`         | Filas del tablero                        | `20`                  |
 | `BLOCK`        | Tamaño en píxeles de cada celda          | `30`                  |
-| `COLORS`       | Paleta de colores por tipo de pieza      | 8 colores             |
+| `SKINS`        | Paleta y función de dibujo de cada skin  | 4 skins               |
 | `LINE_SCORES`  | Puntos por 1, 2, 3 o 4 líneas eliminadas | `[0,100,300,500,800]` |
 | `dropInterval` | Velocidad inicial de caída en ms         | `1000`                |
 | `MAX_RECORDS`  | Número de puestos en la tabla de récords | `5`                   |
