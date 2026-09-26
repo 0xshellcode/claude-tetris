@@ -40,6 +40,7 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
 - **Soft drop** (bajada acelerada) y **hard drop** (caída instantánea).
 - **Pieza fantasma** (_ghost piece_): muestra dónde aterrizará la pieza actual.
 - **Vista previa** de la siguiente pieza.
+- **Hold** (`C` o `Shift`): reserva la pieza actual o la intercambia con la guardada. Solo una vez por pieza; el slot se atenúa mientras está bloqueado.
 - **Sistema de puntuación** clásico de Tetris (100 / 300 / 500 / 800 multiplicado por nivel).
 - **Niveles** que aumentan cada 10 líneas y aceleran la caída.
 - **Pausa** y **Game Over** con opción de reinicio.
@@ -85,6 +86,7 @@ Después abre `http://localhost:8000` en el navegador.
 | `↑` o `X` | Rotar la pieza en sentido horario |
 | `↓`       | Soft drop (bajar más rápido)      |
 | `Espacio` | Hard drop (caída instantánea)     |
+| `C` / `Shift` | Reservar pieza (hold)        |
 | `P`       | Pausar / reanudar                 |
 
 ---
