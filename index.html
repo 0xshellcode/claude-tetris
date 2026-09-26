@@ -16,6 +16,15 @@
           <span class="label">HOLD</span>
           <canvas id="hold-canvas" width="120" height="120"></canvas>
         </div>
+        <div class="panel-section">
+          <span class="label">ENERGÍA</span>
+          <div id="energy-bar" class="energy-bar"><div id="energy-fill"></div></div>
+          <span class="energy-hint"><kbd>E</kbd> habilidad</span>
+        </div>
+        <div id="queue-section" class="panel-section hidden">
+          <span class="label">SIGUIENTES</span>
+          <canvas id="queue-canvas" width="120" height="248"></canvas>
+        </div>
       </aside>
 
       <canvas id="board" width="300" height="600"></canvas>
@@ -51,11 +60,20 @@
             <li><kbd>↓</kbd> bajar</li>
             <li><kbd>Space</kbd> caída</li>
             <li><kbd>C</kbd><kbd>Shift</kbd> reservar</li>
+            <li><kbd>E</kbd> habilidad</li>
             <li><kbd>P</kbd> pausa</li>
             <li><kbd>M</kbd> sonido</li>
           </ul>
         </div>
       </aside>
+    </div>
+
+    <div id="ability-menu" class="overlay hidden">
+      <div class="overlay-box">
+        <p class="menu-title">HABILIDAD</p>
+        <ul id="ability-list" class="ability-list"></ul>
+        <p class="menu-hint"><kbd>1</kbd>–<kbd>5</kbd> elegir · <kbd>Esc</kbd> cancelar</p>
+      </div>
     </div>
 
     <div id="overlay" class="overlay hidden">

@@ -50,6 +50,12 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
   - 🎨 **Tinte**: todos los bloques del color sobre el que cae se vuelven comodines (arcoíris); en la siguiente limpieza de líneas desaparecen todos con bonus.
   - 🧲 **Gravedad**: compacta los huecos del tablero (cada bloque cae hasta el fondo de su columna).
   - ❄️ **Congelar**: la caída automática se detiene 5 s.
+- **Habilidades cargables**: cada línea limpiada llena un 25 % de la barra de **energía**. Llena, `E` pausa y abre un menú (teclas `1`–`5` o clic):
+  1. 👁️ **Ver siguientes 5 piezas** durante 20 s.
+  2. 🔄 **Intercambiar** la pieza actual por otra al azar.
+  3. 🐢 **Ralentizar** la caída ×2.5 durante 10 s.
+  4. ↩️ **Deshacer** la última colocación (tablero, puntos, cola y hold).
+  5. 📥 **Hold extra**: reactiva el hold si ya se usó en este turno.
 - Pieza **1×1** como recompensa: tras un Tetris (4 líneas) la siguiente pieza es un bloque suelto para tapar huecos.
 - **Rotación** con _wall kicks_ básicos (pequeños desplazamientos para que la pieza pueda rotar pegada a la pared).
 - **Soft drop** (bajada acelerada) y **hard drop** (caída instantánea).
@@ -104,6 +110,7 @@ Después abre `http://localhost:8000` en el navegador.
 | `C` / `Shift` | Reservar pieza (hold)        |
 | `P`       | Pausar / reanudar                 |
 | `M`       | Silenciar / activar sonido        |
+| `E`       | Usar habilidad (energía llena)    |
 
 ---
 
