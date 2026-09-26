@@ -44,6 +44,7 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
 - **Niveles** que aumentan cada 10 líneas y aceleran la caída.
 - **Menú de pausa** (`P` o `Esc`): reanudar, reiniciar sin recargar, ver controles y elegir el **nivel inicial** (1–10) de la próxima partida. Mientras está abierto, las teclas del juego quedan bloqueadas.
 - **Game Over** con opción de reinicio.
+- **Tabla de récords local** (`localStorage`): top 5 con nombre, líneas y combo de cada partida, visible en la pantalla de inicio y al perder. Si la partida entra en el top se resalta y se pide el nombre; también guarda el **mejor combo** y las **líneas máximas** históricas. Incluye botón para borrar los récords.
 
 ---
 
@@ -111,7 +112,8 @@ Define la estructura visual:
 
 - Un `<canvas id="board">` de **300 × 600** píxeles donde se renderiza el tablero.
 - Un panel lateral con `SCORE`, `LINES`, `LEVEL`, vista de la siguiente pieza y la lista de controles.
-- Un menú de pausa (`#pause-menu`) y un overlay de **GAME OVER**.
+- Un menú de pausa (`#pause-menu`).
+- Un overlay para la **pantalla de inicio** y **GAME OVER**, con la tabla de récords y el campo de nombre.
 
 ### 2. `style.css`
 
@@ -130,10 +132,14 @@ Contiene toda la lógica del juego. A grandes rasgos:
 - **Puntuación**: usa la tabla clásica `[0, 100, 300, 500, 800]` multiplicada por el nivel actual; el hard drop suma 2 puntos por celda recorrida y el soft drop 1 punto por fila.
 - **Nivel y velocidad**: la partida empieza en el nivel inicial elegido y sube uno cada 10 líneas; la velocidad de caída se calcula como `max(100, 1000 − (level − 1) × 90)` milisegundos.
 - **Ghost piece** (`ghostY`): proyecta la posición final de la pieza actual hacia abajo y la dibuja con `globalAlpha = 0.2`.
+- **Combo**: número de piezas consecutivas que limpian al menos una línea; se guarda el máximo de la partida (`maxCombo`).
+- **Récords** (`loadRecords`, `recordRank`, `commitPendingEntry`): se guardan en `localStorage` bajo la clave `tetris-records` como `{ top, bestCombo, maxLines }`. Una partida entra en el top si supera a la 5.ª (en empate queda por debajo de la ya guardada). El último nombre usado se recuerda en `tetris-player-name`; reiniciar sin pulsar "Guardar" también guarda el récord.
 
 ### Flujo del juego
 
 ```
+carga → showOverlay('start')        → pantalla de inicio con récords; "Jugar" llama a init()
+
 init()
   ├─ createBoard()                  → matriz vacía
   ├─ next = randomPiece()
@@ -149,7 +155,7 @@ init()
    keydown → mover / rotar / soft-drop / hard-drop / pausa
 ```
 
-Cuando una pieza recién generada ya colisiona al aparecer (`spawn`), se dispara `endGame()` y se muestra el overlay de **Game Over**.
+Cuando una pieza recién generada ya colisiona al aparecer (`spawn`), se dispara `endGame()`: actualiza mejor combo y líneas máximas, comprueba si la puntuación entra en el top 5 y muestra el overlay de **Game Over** con la tabla de récords.
 
 ---
 
@@ -189,6 +195,7 @@ Algunos parámetros fáciles de tunear en `game.js`:
 | `COLORS`       | Paleta de colores por tipo de pieza      | 8 colores             |
 | `LINE_SCORES`  | Puntos por 1, 2, 3 o 4 líneas eliminadas | `[0,100,300,500,800]` |
 | `dropInterval` | Velocidad inicial de caída en ms         | `1000`                |
+| `MAX_RECORDS`  | Número de puestos en la tabla de récords | `5`                   |
 
 > Si cambias `COLS`, `ROWS` o `BLOCK`, recuerda ajustar también `width` y `height` del `<canvas id="board">` en `index.html` para que coincida (`COLS × BLOCK` × `ROWS × BLOCK`).
 
