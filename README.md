@@ -56,6 +56,13 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
   3. 🐢 **Ralentizar** la caída ×2.5 durante 10 s.
   4. ↩️ **Deshacer** la última colocación (tablero, puntos, cola y hold).
   5. 📥 **Hold extra**: reactiva el hold si ya se usó en este turno.
+- **Modos de juego** (menú al iniciar, botón *Cambiar modo* al terminar):
+  - **Maratón**: el clásico sin fin.
+  - **Sprint 40**: limpia 40 líneas en 2 minutos.
+  - **Basura**: sobrevive 2 minutos; cada 10 s sube una fila de basura (con un hueco) desde abajo.
+  - **Bloques fijos**: el tablero empieza con 6 filas pre-colocadas; elimínalas todas.
+  - **Invisible**: limpia 20 líneas; las piezas desaparecen al tocar suelo (se revelan al terminar).
+  - **Rotación inversa**: limpia 30 líneas; desde el nivel 3 la rotación pasa a antihoraria.
 - Pieza **1×1** como recompensa: tras un Tetris (4 líneas) la siguiente pieza es un bloque suelto para tapar huecos.
 - **Rotación** con _wall kicks_ básicos (pequeños desplazamientos para que la pieza pueda rotar pegada a la pared).
 - **Soft drop** (bajada acelerada) y **hard drop** (caída instantánea).

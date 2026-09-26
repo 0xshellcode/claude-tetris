@@ -321,3 +321,36 @@ kbd {
 #restart-btn:hover {
   background: var(--restart-hover);
 }
+
+#overlay-title.win {
+  color: #66bb6a;
+}
+
+.secondary-btn {
+  background: transparent;
+  color: var(--value-color);
+  border: 1px solid var(--kbd-border);
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.secondary-btn:hover {
+  border-color: var(--value-color);
+}
+
+/* ---- Objetivo del modo ---- */
+.goal-text {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.goal-progress {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--value-color);
+}
