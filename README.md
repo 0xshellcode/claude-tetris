@@ -44,6 +44,12 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
   - **Back-to-Back**: dos limpiezas "difíciles" seguidas (Tetris o T-spin) dan ×1.5.
   - **Perfect Clear**: dejar el tablero vacío suma 3000 × nivel.
   - Textos flotantes, destello y sonidos (Web Audio) al encadenar. `M` silencia.
+- **Power-ups**: cada 5 líneas aparece en NEXT un bloque 1×1 especial. Al fijarse no se queda en el tablero, aplica su efecto donde cae:
+  - 💣 **Bomba**: destruye el área 3×3 alrededor.
+  - ⚡ **Rayo**: limpia su fila y su columna completas.
+  - 🎨 **Tinte**: todos los bloques del color sobre el que cae se vuelven comodines (arcoíris); en la siguiente limpieza de líneas desaparecen todos con bonus.
+  - 🧲 **Gravedad**: compacta los huecos del tablero (cada bloque cae hasta el fondo de su columna).
+  - ❄️ **Congelar**: la caída automática se detiene 5 s.
 - Pieza **1×1** como recompensa: tras un Tetris (4 líneas) la siguiente pieza es un bloque suelto para tapar huecos.
 - **Rotación** con _wall kicks_ básicos (pequeños desplazamientos para que la pieza pueda rotar pegada a la pared).
 - **Soft drop** (bajada acelerada) y **hard drop** (caída instantánea).

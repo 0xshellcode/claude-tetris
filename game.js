@@ -18,6 +18,12 @@ const COLORS = [
   '#aed581', // U - lima
   '#4db6ac', // Y - verde azulado
   '#a1887f', // 1×1 - café
+  '#ef5350', // power-up bomba
+  '#f9a825', // power-up rayo
+  '#ce93d8', // power-up tinte
+  '#7986cb', // power-up gravedad
+  '#0277bd', // power-up congelar
+  '#ffffff', // comodín (se dibuja con degradado arcoíris)
 ];
 
 const PIECES = [
@@ -34,6 +40,7 @@ const PIECES = [
   [[10,0,10],[10,10,10],[0,0,0]],             // U (pentominó)
   [[0,0,0,0],[11,11,11,11],[0,11,0,0],[0,0,0,0]], // Y (pentominó)
   [[12]],                                      // 1×1 - recompensa tras un Tetris
+  [[13]], [[14]], [[15]], [[16]], [[17]],      // power-ups (1×1, no se quedan en el tablero)
 ];
 
 const STANDARD_TYPES = [1, 2, 3, 4, 5, 6, 7];
@@ -42,6 +49,23 @@ const SPECIAL_TYPES = [8, 9, 10, 11];
 const SPECIAL_CHANCE = 0.1;
 const SINGLE_TYPE = 12;
 const QUEUE_SIZE = 5;
+
+// Power-ups: cada POWERUP_EVERY líneas aparece uno en NEXT. Al fijarse no se
+// queda en el tablero: aplica su efecto donde cae.
+const POWERUPS = {
+  13: { name: 'BOMBA', icon: '💣' },     // destruye un área 3×3
+  14: { name: 'RAYO', icon: '⚡' },      // limpia su fila y su columna
+  15: { name: 'TINTE', icon: '🎨' },     // un color entero pasa a ser comodín
+  16: { name: 'GRAVEDAD', icon: '🧲' },  // compacta los huecos de cada columna
+  17: { name: 'CONGELAR', icon: '❄️' },  // detiene la caída 5 s
+};
+const POWERUP_TYPES = Object.keys(POWERUPS).map(Number);
+const POWERUP_EVERY = 5;
+const FREEZE_MS = 5000;
+// Los comodines desaparecen todos en la siguiente limpieza de líneas.
+const WILD_TYPE = 18;
+const WILD_BONUS = 25;
+const DESTROY_BONUS = 10;
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
 const TSPIN_SCORES = [400, 800, 1200, 1600];
@@ -70,6 +94,7 @@ let board, current, queue, hold, canHold, score, lines, level, paused, gameOver,
 let gridLineColor = '#22222e';
 // combo: limpiezas consecutivas; b2b: la última limpieza fue "difícil" (Tetris o T-spin)
 let combo, b2b, lastMoveRotate;
+let nextPowerupAt, freezeTime;
 // Textos flotantes sobre el tablero y destello de Perfect Clear
 let effects = [], flash = 0;
 let audioCtx = null, muted = false;
@@ -188,10 +213,75 @@ function clearLines() {
   if (cleared === 4) queue.unshift(makePiece(SINGLE_TYPE));
   if (cleared) {
     lines += cleared;
+    removeWilds();
+    // Tras la pieza que está por salir, para que se vea en NEXT.
+    while (lines >= nextPowerupAt) {
+      queue.splice(1, 0, makePiece(pick(POWERUP_TYPES)));
+      nextPowerupAt += POWERUP_EVERY;
+    }
     level = Math.floor(lines / 10) + 1;
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
   }
   return cleared;
+}
+
+function removeWilds() {
+  let removed = 0;
+  for (const row of board)
+    for (let c = 0; c < COLS; c++)
+      if (row[c] === WILD_TYPE) { row[c] = 0; removed++; }
+  if (removed) {
+    score += removed * WILD_BONUS * level;
+    addEffect(`COMODINES +${removed}`, 3);
+  }
+}
+
+function applyPowerup() {
+  const px = current.x, py = current.y;
+  const { name } = POWERUPS[current.type];
+  let destroyed = 0;
+  const destroy = (r, c) => {
+    if (r < 0 || r >= ROWS || c < 0 || c >= COLS || !board[r][c]) return;
+    board[r][c] = 0;
+    destroyed++;
+  };
+
+  if (name === 'BOMBA') {
+    for (let r = py - 1; r <= py + 1; r++)
+      for (let c = px - 1; c <= px + 1; c++) destroy(r, c);
+  } else if (name === 'RAYO') {
+    for (let r = 0; r < ROWS; r++) destroy(r, px);
+    for (let c = 0; c < COLS; c++) destroy(py, c);
+    board.splice(py, 1);
+    board.unshift(new Array(COLS).fill(0));
+  } else if (name === 'TINTE') {
+    // Color del bloque sobre el que cae; si cae al suelo, el más abundante.
+    let target = board[py + 1]?.[px];
+    if (!target || target === WILD_TYPE) {
+      const counts = {};
+      for (const row of board)
+        for (const v of row)
+          if (v && v !== WILD_TYPE) counts[v] = (counts[v] || 0) + 1;
+      target = Number(Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0]) || 0;
+    }
+    if (target)
+      for (const row of board)
+        for (let c = 0; c < COLS; c++)
+          if (row[c] === target) row[c] = WILD_TYPE;
+  } else if (name === 'GRAVEDAD') {
+    for (let c = 0; c < COLS; c++) {
+      const column = [];
+      for (let r = ROWS - 1; r >= 0; r--) if (board[r][c]) column.push(board[r][c]);
+      for (let r = ROWS - 1, i = 0; r >= 0; r--, i++) board[r][c] = column[i] || 0;
+    }
+  } else if (name === 'CONGELAR') {
+    freezeTime = FREEZE_MS;
+  }
+
+  score += destroyed * DESTROY_BONUS * level;
+  addEffect(name, 0);
+  playTone(220, 0.25, 0, 'sawtooth');
+  playTone(440, 0.2, 0.1, 'triangle');
 }
 
 function scoreClear(cleared, tspin) {
@@ -290,9 +380,17 @@ function softDrop() {
 }
 
 function lockPiece() {
-  const tspin = isTSpin();
-  merge();
-  scoreClear(clearLines(), tspin);
+  if (POWERUPS[current.type]) {
+    applyPowerup();
+    // Un power-up no rompe el combo si no limpia líneas.
+    const cleared = clearLines();
+    if (cleared) scoreClear(cleared, false);
+    else updateHUD();
+  } else {
+    const tspin = isTSpin();
+    merge();
+    scoreClear(clearLines(), tspin);
+  }
   canHold = true;
   spawn();
 }
@@ -331,13 +429,28 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
+  const px = x * size + 1, py = y * size + 1;
   context.globalAlpha = alpha ?? 1;
-  context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+  if (colorIndex === WILD_TYPE) {
+    const gradient = context.createLinearGradient(px, py, px + size, py + size);
+    ['#e57373', '#ffd54f', '#81c784', '#64b5f6', '#ba68c8'].forEach((c, i) => gradient.addColorStop(i / 4, c));
+    context.fillStyle = gradient;
+  } else {
+    context.fillStyle = COLORS[colorIndex];
+  }
+  context.fillRect(px, py, size - 2, size - 2);
   // highlight
   context.fillStyle = 'rgba(255,255,255,0.12)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+  context.fillRect(px, py, size - 2, 4);
+  const powerup = POWERUPS[colorIndex];
+  if (powerup) {
+    context.font = `${Math.floor(size * 0.6)}px system-ui, sans-serif`;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillStyle = '#000';
+    context.fillText(powerup.icon, px + size / 2 - 1, py + size / 2);
+    context.textBaseline = 'alphabetic';
+  }
   context.globalAlpha = 1;
 }
 
@@ -386,6 +499,14 @@ function draw() {
 }
 
 function drawEffects() {
+  if (freezeTime > 0) {
+    ctx.fillStyle = 'rgba(129,212,250,0.12)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 16px system-ui, sans-serif';
+    ctx.fillStyle = '#29b6f6';
+    ctx.fillText(`❄️ ${(freezeTime / 1000).toFixed(1)}s`, canvas.width / 2, 24);
+  }
   if (flash > 0) {
     ctx.fillStyle = `rgba(255,255,255,${(flash / 400) * 0.6})`;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -458,7 +579,8 @@ function togglePause() {
 function loop(ts) {
   const dt = ts - lastTime;
   lastTime = ts;
-  dropAccum += dt;
+  if (freezeTime > 0) freezeTime = Math.max(0, freezeTime - dt);
+  else dropAccum += dt;
   if (dropAccum >= dropInterval) {
     dropAccum = 0;
     if (!collide(current.shape, current.x, current.y + 1)) {
@@ -485,6 +607,8 @@ function init() {
   gameOver = false;
   combo = 0;
   b2b = false;
+  nextPowerupAt = POWERUP_EVERY;
+  freezeTime = 0;
   effects = [];
   flash = 0;
   dropInterval = 1000;
