@@ -72,6 +72,12 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
 - **Sistema de puntuación** clásico de Tetris (100 / 300 / 500 / 800 multiplicado por nivel).
 - **Niveles** que aumentan cada 10 líneas y aceleran la caída.
 - **Pausa** y **Game Over** con opción de reinicio.
+- **Skins visuales** (selector *SKIN* del panel derecho), se cambian al instante sin recargar y se recuerdan en `localStorage` (`tetris-skin`):
+  - **Retro**: bloques cuadrados y colores planos (el estilo clásico).
+  - **Neón**: fondo negro y bloques con resplandor (`shadowBlur` en canvas).
+  - **Pastel**: paleta suave y esquinas redondeadas.
+  - **Pixel art**: bisel claro/oscuro y tramado de sub-píxeles sobre cada bloque.
+  - Compatibles con el tema claro/oscuro (🌙/☀️).
 
 ---
 
@@ -130,12 +136,12 @@ El juego se compone de tres archivos que cooperan:
 Define la estructura visual:
 
 - Un `<canvas id="board">` de **300 × 600** píxeles donde se renderiza el tablero.
-- Un panel lateral con `SCORE`, `LINES`, `LEVEL`, vista de la siguiente pieza y la lista de controles.
+- Un panel lateral con `SCORE`, `LINES`, `LEVEL`, vista de la siguiente pieza, el selector de skin y la lista de controles.
 - Un overlay para los estados **PAUSA** y **GAME OVER**.
 
 ### 2. `style.css`
 
-Aporta el aspecto visual con estética _dark / retro arcade_: fondo oscuro, tipografía monoespaciada para los marcadores y _backdrop blur_ en los overlays.
+Aporta el aspecto visual con estética _dark / retro arcade_: fondo oscuro, tipografía monoespaciada para los marcadores y _backdrop blur_ en los overlays. Los temas claro/oscuro (`data-theme`) y las skins (`data-skin` en `<html>`) redefinen variables CSS como `--board-bg` y `--grid-line` (por ejemplo, el tablero negro de la skin Neón).
 
 ### 3. `game.js`
 
@@ -206,7 +212,7 @@ Algunos parámetros fáciles de tunear en `game.js`:
 | `COLS`         | Columnas del tablero                     | `10`                  |
 | `ROWS`         | Filas del tablero                        | `20`                  |
 | `BLOCK`        | Tamaño en píxeles de cada celda          | `30`                  |
-| `COLORS`       | Paleta de colores por tipo de pieza      | 12 colores            |
+| `SKINS`        | Skins: paleta por tipo de bloque (21 índices) y función de dibujo | `retro`, `neon`, `pastel`, `pixel` |
 | `LINE_SCORES`  | Puntos por 1, 2, 3 o 4 líneas eliminadas | `[0,100,300,500,800]` |
 | `dropInterval` | Velocidad inicial de caída en ms         | `1000`                |
 | `SPECIAL_CHANCE` | Probabilidad de pieza no estándar      | `0.1`                 |
