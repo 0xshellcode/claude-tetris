@@ -72,6 +72,12 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
 - **Sistema de puntuación** clásico de Tetris (100 / 300 / 500 / 800 multiplicado por nivel).
 - **Niveles** que aumentan cada 10 líneas y aceleran la caída.
 - **Pausa** y **Game Over** con opción de reinicio.
+- **Tabla de récords local** (se guarda en `localStorage`, sin servidor):
+  - Top 5 puntuaciones con nombre del jugador, puntos, líneas y modo de juego.
+  - Si tu puntuación entra en el top, el Game Over muestra **¡Nuevo récord!**, el puesto y un campo para escribir tu nombre (máx. 12 caracteres, `Enter` o *Guardar*). Recuerda el último nombre usado; si reinicias sin guardar se guarda con ese nombre (o `Jugador`).
+  - La tabla aparece en la pantalla de inicio y en el Game Over, con la fila recién guardada resaltada.
+  - Marcas históricas: **mejor combo** y **máximo de líneas** en una partida (se actualizan al terminar cada partida aunque no entre en el top).
+  - Botón **Borrar récords** con confirmación en dos clics.
 
 ---
 
@@ -131,7 +137,8 @@ Define la estructura visual:
 
 - Un `<canvas id="board">` de **300 × 600** píxeles donde se renderiza el tablero.
 - Un panel lateral con `SCORE`, `LINES`, `LEVEL`, vista de la siguiente pieza y la lista de controles.
-- Un overlay para los estados **PAUSA** y **GAME OVER**.
+- Un overlay para los estados **PAUSA** y **GAME OVER** (este último con el campo de nombre y la tabla de récords).
+- El menú de modos de juego, que también muestra la tabla de récords al iniciar.
 
 ### 2. `style.css`
 
@@ -150,6 +157,7 @@ Contiene toda la lógica del juego. A grandes rasgos:
 - **Puntuación**: usa la tabla clásica `[0, 100, 300, 500, 800]` multiplicada por el nivel actual; el hard drop suma 2 puntos por celda recorrida y el soft drop 1 punto por fila.
 - **Nivel y velocidad**: el nivel sube cada 10 líneas; la velocidad de caída se calcula como `max(100, 1000 − (level − 1) × 90)` milisegundos.
 - **Ghost piece** (`ghostY`): proyecta la posición final de la pieza actual hacia abajo y la dibuja con `globalAlpha = 0.2`.
+- **Récords** (`recordGameResult`, `savePendingScore`, `renderRecords`): al terminar la partida (`endGame`, una sola vez gracias a `scoreSaved`) se actualizan las marcas históricas y, si la puntuación supera al 5.º puesto, queda pendiente de nombre. Se persiste en `localStorage` con las claves `tetris-highscores` (top 5 `{name, score, lines, maxCombo, mode, date}`), `tetris-stats` (`{bestCombo, maxLines}`) y `tetris-player-name`. Todas las lecturas/escrituras van en `try/catch` y los datos corruptos se descartan. Los nombres se pintan con `textContent` (nunca `innerHTML`) y, mientras se escribe en el campo de nombre, los atajos de teclado del juego se ignoran.
 
 ### Flujo del juego
 
@@ -180,6 +188,7 @@ Cuando una pieza recién generada ya colisiona al aparecer (`spawn`), se dispara
 - **JavaScript (ES6+) vanilla** — `const`/`let`, _arrow functions_, _spread operator_, `Array.from`, _template literals_…
 - **Canvas 2D API** — para todo el renderizado del juego.
 - **`requestAnimationFrame`** — para el bucle de juego sincronizado con el navegador.
+- **Web Storage (`localStorage`)** — para el tema elegido y la tabla de récords (top 5, mejor combo, máximo de líneas y último nombre).
 
 **Sin dependencias.** No hay `package.json`, ni bundler, ni transpilador.
 
