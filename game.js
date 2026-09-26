@@ -24,6 +24,8 @@ const COLORS = [
   '#7986cb', // power-up gravedad
   '#0277bd', // power-up congelar
   '#ffffff', // comodín (se dibuja con degradado arcoíris)
+  '#757575', // basura (modo desafío)
+  '#546e7a', // bloque pre-colocado (modo desafío)
 ];
 
 const PIECES = [
@@ -74,6 +76,19 @@ const PREVIEW_MS = 20000;
 const SLOW_MS = 10000;
 const SLOW_FACTOR = 2.5;
 
+// Modos de juego. Maratón es el clásico; el resto son desafíos con objetivo.
+const GARBAGE_TYPE = 19;
+const PRESET_TYPE = 20;
+const MODES = {
+  marathon: { name: 'Maratón', goal: 'Juego clásico sin fin' },
+  sprint: { name: 'Sprint 40', goal: 'Limpia 40 líneas en 2 minutos', targetLines: 40, timeLimit: 120000 },
+  garbage: { name: 'Basura', goal: 'Sobrevive 2 minutos: sube basura desde abajo cada 10 s', timeLimit: 120000, survive: true, garbageEvery: 10000 },
+  preset: { name: 'Bloques fijos', goal: 'Elimina todos los bloques pre-colocados', preset: true },
+  invisible: { name: 'Invisible', goal: 'Limpia 20 líneas: las piezas desaparecen al tocar suelo', targetLines: 20, invisible: true },
+  inverse: { name: 'Rotación inversa', goal: 'Limpia 30 líneas: desde el nivel 3 la rotación se invierte', targetLines: 30, inverseFromLevel: 3 },
+};
+const PRESET_ROWS = 6;
+
 const LINE_SCORES = [0, 100, 300, 500, 800];
 const TSPIN_SCORES = [400, 800, 1200, 1600];
 const TSPIN_NAMES = ['', 'SINGLE', 'DOUBLE', 'TRIPLE'];
@@ -98,6 +113,11 @@ const queueCanvas = document.getElementById('queue-canvas');
 const queueCtx = queueCanvas.getContext('2d');
 const abilityMenu = document.getElementById('ability-menu');
 const abilityList = document.getElementById('ability-list');
+const modeMenu = document.getElementById('mode-menu');
+const modeList = document.getElementById('mode-list');
+const modeBtn = document.getElementById('mode-btn');
+const goalEl = document.getElementById('goal');
+const goalProgressEl = document.getElementById('goal-progress');
 const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
@@ -113,6 +133,7 @@ let nextPowerupAt, freezeTime;
 let energy, menuOpen = false, previewTime, slowTime, snapshot;
 // Puntuación al aparecer la pieza: deshacer también revierte los puntos de soft/hard drop
 let spawnScore;
+let mode = 'marathon', modeTime, garbageAccum, modeMenuOpen = false, inverseAnnounced;
 // Textos flotantes sobre el tablero y destello de Perfect Clear
 let effects = [], flash = 0;
 let audioCtx = null, muted = false;
@@ -184,8 +205,17 @@ function rotateCW(shape) {
   return result;
 }
 
+function rotateCCW(shape) {
+  return rotateCW(rotateCW(rotateCW(shape)));
+}
+
+function isRotationInverted() {
+  const { inverseFromLevel } = MODES[mode];
+  return !!inverseFromLevel && level >= inverseFromLevel;
+}
+
 function tryRotate() {
-  const rotated = rotateCW(current.shape);
+  const rotated = isRotationInverted() ? rotateCCW(current.shape) : rotateCW(current.shape);
   const kicks = [0, -1, 1, -2, 2];
   for (const kick of kicks) {
     if (!collide(rotated, current.x + kick, current.y)) {
@@ -508,10 +538,11 @@ function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawGrid();
 
-  // board
-  for (let r = 0; r < ROWS; r++)
-    for (let c = 0; c < COLS; c++)
-      drawBlock(ctx, c, r, board[r][c], BLOCK);
+  // board (en modo invisible solo se revela al terminar)
+  if (!MODES[mode].invisible || gameOver)
+    for (let r = 0; r < ROWS; r++)
+      for (let c = 0; c < COLS; c++)
+        drawBlock(ctx, c, r, board[r][c], BLOCK);
 
   // La pieza que ya no cabe al perder no se dibuja encima del tablero.
   if (gameOver) return;
@@ -685,12 +716,97 @@ function drawHold() {
   holdCanvas.classList.toggle('locked', !canHold);
 }
 
-function endGame() {
+// ---- Modos de juego ----
+function formatTime(ms) {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}
+
+function countCells(type) {
+  return board.reduce((n, row) => n + row.filter(v => v === type).length, 0);
+}
+
+function setupPresetBoard() {
+  for (let r = ROWS - PRESET_ROWS; r < ROWS; r++) {
+    const gaps = new Set();
+    while (gaps.size < 2) gaps.add(Math.floor(Math.random() * COLS));
+    for (let c = 0; c < COLS; c++) board[r][c] = gaps.has(c) ? 0 : PRESET_TYPE;
+  }
+}
+
+// La fila superior se pierde; si tenía bloques, se acabó.
+function addGarbageRow() {
+  const overflow = board[0].some(Boolean);
+  board.shift();
+  const gap = Math.floor(Math.random() * COLS);
+  board.push(Array.from({ length: COLS }, (_, c) => (c === gap ? 0 : GARBAGE_TYPE)));
+  if (collide(current.shape, current.x, current.y)) current.y--;
+  if (overflow || collide(current.shape, current.x, current.y)) endGame(false);
+}
+
+function updateMode(dt) {
+  const m = MODES[mode];
+  modeTime += dt;
+  if (m.garbageEvery) {
+    garbageAccum += dt;
+    if (garbageAccum >= m.garbageEvery) {
+      garbageAccum -= m.garbageEvery;
+      addGarbageRow();
+      if (gameOver) return;
+    }
+  }
+  if (isRotationInverted() && !inverseAnnounced) {
+    inverseAnnounced = true;
+    addEffect('¡ROTACIÓN INVERTIDA!', 0);
+  }
+  if (m.targetLines && lines >= m.targetLines) return endGame(true);
+  if (m.preset && !countCells(PRESET_TYPE)) return endGame(true);
+  if (m.timeLimit && modeTime >= m.timeLimit) return endGame(!!m.survive, 'TIEMPO AGOTADO');
+  updateGoal();
+}
+
+function updateGoal() {
+  const m = MODES[mode];
+  const parts = [];
+  if (m.targetLines) parts.push(`${Math.min(lines, m.targetLines)}/${m.targetLines} líneas`);
+  if (m.preset) parts.push(`Quedan ${countCells(PRESET_TYPE)} bloques`);
+  if (m.timeLimit) parts.push(formatTime(m.timeLimit - modeTime));
+  else if (mode !== 'marathon') parts.push(formatTime(modeTime));
+  if (isRotationInverted()) parts.push('↺ invertida');
+  goalProgressEl.textContent = parts.join(' · ');
+}
+
+function showModeMenu() {
+  modeMenuOpen = true;
+  gameOver = true;
+  cancelAnimationFrame(animId);
+  overlay.classList.add('hidden');
+  modeList.innerHTML = '';
+  Object.entries(MODES).forEach(([key, m], i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<kbd>${i + 1}</kbd><span>${m.name}<small>${m.goal}</small></span>`;
+    li.addEventListener('click', () => startMode(key));
+    modeList.appendChild(li);
+  });
+  modeMenu.classList.remove('hidden');
+}
+
+function startMode(key) {
+  modeMenuOpen = false;
+  modeMenu.classList.add('hidden');
+  init(key);
+}
+
+function endGame(won = false, reason = 'GAME OVER') {
   gameOver = true;
   cancelAnimationFrame(animId);
   draw();
-  overlayTitle.textContent = 'GAME OVER';
-  overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
+  const challenge = mode !== 'marathon';
+  overlayTitle.textContent = won ? '¡OBJETIVO CUMPLIDO!' : reason;
+  overlayTitle.classList.toggle('win', won);
+  if (challenge) updateGoal();
+  overlayScore.textContent = `Puntuación: ${score.toLocaleString()}` +
+    (challenge ? ` · ${MODES[mode].name} · ${formatTime(modeTime)}` : '');
   overlay.classList.remove('hidden');
 }
 
@@ -728,6 +844,7 @@ function loop(ts) {
     }
   }
   updateEffects(dt);
+  if (!gameOver) updateMode(dt);
   // endGame() pudo ejecutarse dentro de este frame: su cancelAnimationFrame no
   // detiene el frame en curso, así que aquí se corta el loop sin agendar otro.
   if (gameOver) return;
@@ -735,8 +852,14 @@ function loop(ts) {
   animId = requestAnimationFrame(loop);
 }
 
-function init() {
+function init(modeKey = mode) {
+  mode = modeKey;
+  modeTime = 0;
+  garbageAccum = 0;
+  inverseAnnounced = false;
   board = createBoard();
+  if (MODES[mode].preset) setupPresetBoard();
+  goalEl.textContent = MODES[mode].goal;
   score = 0;
   lines = 0;
   level = 1;
@@ -752,6 +875,8 @@ function init() {
   snapshot = null;
   menuOpen = false;
   abilityMenu.classList.add('hidden');
+  modeMenu.classList.add('hidden');
+  modeMenuOpen = false;
   effects = [];
   flash = 0;
   dropInterval = 1000;
@@ -763,12 +888,18 @@ function init() {
   fillQueue();
   spawn();
   updateHUD();
+  updateGoal();
   overlay.classList.add('hidden');
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
+  if (modeMenuOpen) {
+    const key = Object.keys(MODES)[Number(e.code.replace('Digit', '')) - 1];
+    if (/^Digit\d$/.test(e.code) && key) startMode(key);
+    return;
+  }
   if (menuOpen) {
     if (e.code === 'Escape' || e.code === 'KeyE') closeAbilityMenu();
     else if (/^Digit[1-5]$/.test(e.code)) useAbility(Number(e.code.slice(5)) - 1);
@@ -807,8 +938,9 @@ document.addEventListener('keydown', e => {
   updateHUD();
 });
 
-restartBtn.addEventListener('click', init);
+restartBtn.addEventListener('click', () => init(mode));
+modeBtn.addEventListener('click', showModeMenu);
 themeToggleBtn?.addEventListener('click', toggleTheme);
 
 initTheme();
-init();
+showModeMenu();

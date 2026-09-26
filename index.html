@@ -21,6 +21,11 @@
           <div id="energy-bar" class="energy-bar"><div id="energy-fill"></div></div>
           <span class="energy-hint"><kbd>E</kbd> habilidad</span>
         </div>
+        <div class="panel-section goal-section">
+          <span class="label">OBJETIVO</span>
+          <span id="goal" class="goal-text"></span>
+          <span id="goal-progress" class="goal-progress"></span>
+        </div>
         <div id="queue-section" class="panel-section hidden">
           <span class="label">SIGUIENTES</span>
           <canvas id="queue-canvas" width="120" height="248"></canvas>
@@ -68,6 +73,14 @@
       </aside>
     </div>
 
+    <div id="mode-menu" class="overlay hidden">
+      <div class="overlay-box">
+        <p class="menu-title">MODO DE JUEGO</p>
+        <ul id="mode-list" class="ability-list"></ul>
+        <p class="menu-hint"><kbd>1</kbd>–<kbd>6</kbd> o clic para elegir</p>
+      </div>
+    </div>
+
     <div id="ability-menu" class="overlay hidden">
       <div class="overlay-box">
         <p class="menu-title">HABILIDAD</p>
@@ -81,6 +94,7 @@
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
         <button id="restart-btn">Reiniciar</button>
+        <button id="mode-btn" class="secondary-btn">Cambiar modo</button>
       </div>
     </div>
   </div>
