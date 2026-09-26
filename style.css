@@ -140,12 +140,100 @@ body {
 }
 
 #next-canvas,
-#hold-canvas {
+#hold-canvas,
+#queue-canvas {
   display: block;
   border: 1px solid var(--board-border);
   background: var(--board-bg);
   border-radius: 4px;
   transition: opacity 0.15s;
+}
+
+#queue-section.hidden {
+  display: none;
+}
+
+/* ---- Energía ---- */
+.energy-bar {
+  height: 12px;
+  border: 1px solid var(--board-border);
+  background: var(--board-bg);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+#energy-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #64b5f6, #ba68c8);
+  transition: width 0.3s;
+}
+
+.energy-bar.full {
+  box-shadow: 0 0 10px #ba68c8;
+  animation: energy-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes energy-pulse {
+  from { box-shadow: 0 0 4px #ba68c8; }
+  to { box-shadow: 0 0 14px #ba68c8; }
+}
+
+.energy-hint {
+  font-size: 11px;
+  color: var(--controls-color);
+}
+
+/* ---- Menú de habilidades ---- */
+.menu-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: var(--value-color);
+}
+
+.ability-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.ability-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--kbd-border);
+  background: var(--kbd-bg);
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.ability-list li:hover {
+  border-color: var(--value-color);
+}
+
+.ability-list li.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.ability-list small {
+  display: block;
+  font-size: 11px;
+  color: var(--controls-color);
+}
+
+.ability-icon {
+  font-size: 20px;
+}
+
+.menu-hint {
+  font-size: 12px;
+  color: var(--controls-color);
 }
 
 /* Hold ya usado en este turno */
