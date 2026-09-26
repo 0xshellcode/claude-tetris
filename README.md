@@ -38,6 +38,12 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
 - Piezas **no estándar** que aparecen ocasionalmente (10 % de las veces):
   - **Tuerca** (N): bloque 3×3 con el centro vacío. Al fijarse deja un hueco encerrado que no se puede rellenar hasta limpiar la fila superior.
   - Pentominós **`+`**, **`U`** e **`Y`** (5 bloques).
+- **Combos y bonus**:
+  - Limpiar líneas en fijados consecutivos multiplica los puntos (x2, x3, x4…).
+  - **T-spin** (regla de las 3 esquinas): 400/800/1200/1600 puntos por 0/1/2/3 líneas.
+  - **Back-to-Back**: dos limpiezas "difíciles" seguidas (Tetris o T-spin) dan ×1.5.
+  - **Perfect Clear**: dejar el tablero vacío suma 3000 × nivel.
+  - Textos flotantes, destello y sonidos (Web Audio) al encadenar. `M` silencia.
 - Pieza **1×1** como recompensa: tras un Tetris (4 líneas) la siguiente pieza es un bloque suelto para tapar huecos.
 - **Rotación** con _wall kicks_ básicos (pequeños desplazamientos para que la pieza pueda rotar pegada a la pared).
 - **Soft drop** (bajada acelerada) y **hard drop** (caída instantánea).
@@ -91,6 +97,7 @@ Después abre `http://localhost:8000` en el navegador.
 | `Espacio` | Hard drop (caída instantánea)     |
 | `C` / `Shift` | Reservar pieza (hold)        |
 | `P`       | Pausar / reanudar                 |
+| `M`       | Silenciar / activar sonido        |
 
 ---
 
