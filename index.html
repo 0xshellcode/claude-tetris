@@ -39,10 +39,43 @@
             <li><kbd>↑</kbd> rotar</li>
             <li><kbd>↓</kbd> bajar</li>
             <li><kbd>Space</kbd> caída</li>
-            <li><kbd>P</kbd> pausa</li>
+            <li><kbd>P</kbd><kbd>Esc</kbd> pausa</li>
           </ul>
         </div>
       </aside>
+    </div>
+
+    <div id="pause-menu" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+      <div class="overlay-box menu-box">
+        <p id="pause-title">PAUSA</p>
+
+        <div id="pause-main" class="menu-view">
+          <button class="menu-btn primary" data-action="resume">Reanudar</button>
+          <button class="menu-btn" data-action="restart">Reiniciar</button>
+          <button class="menu-btn" data-action="controls">Ver controles</button>
+
+          <div class="level-picker">
+            <span class="label">NIVEL INICIAL</span>
+            <div class="level-stepper">
+              <button class="step-btn" data-action="level-down" aria-label="Bajar nivel inicial">◀</button>
+              <span id="start-level" class="value" aria-live="polite">1</span>
+              <button class="step-btn" data-action="level-up" aria-label="Subir nivel inicial">▶</button>
+            </div>
+            <span class="menu-hint"><kbd>←</kbd><kbd>→</kbd> cambiar · se aplica al reiniciar</span>
+          </div>
+        </div>
+
+        <div id="pause-controls" class="menu-view hidden">
+          <ul class="menu-controls">
+            <li><span><kbd>←</kbd><kbd>→</kbd></span> mover</li>
+            <li><span><kbd>↑</kbd><kbd>X</kbd></span> rotar</li>
+            <li><span><kbd>↓</kbd></span> bajar</li>
+            <li><span><kbd>Space</kbd></span> caída</li>
+            <li><span><kbd>P</kbd><kbd>Esc</kbd></span> pausa</li>
+          </ul>
+          <button class="menu-btn" data-action="back">Volver</button>
+        </div>
+      </div>
     </div>
 
     <div id="overlay" class="overlay hidden">
